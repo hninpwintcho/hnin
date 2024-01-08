@@ -1,0 +1,291 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+// Function declarations
+void copy_two_charArray(char first[30], char second[30]);
+void registration();
+void menu();
+void login();
+void login_checking(char l_email[30], char l_pass[20]);
+int compare_two_char_array(char first[30], char second[30]);
+int size_of_charArray(char arr[30]);
+void my_privilege(int user_id);
+void logout();
+void display_user_data(int user_id);
+
+
+// Global variables
+int g_userCount = 0;
+int g_login_check = -1;
+
+// Structure declaration
+struct Db {
+    int user_id;
+    char user_name[30];
+    char user_email[30];
+    char user_pass[20];
+    int phone_number;
+    char address[50];
+    int postal_code;
+    int is_logged_in; // New field to track login status
+};
+
+// Array of structures
+struct Db data[5]; // Assuming 5 users
+
+int main() {
+    menu();
+    return 0;
+}
+
+void menu() {
+    while (1) {
+        int option = 0;
+        printf("Welcome to our System!\n");
+        printf("Press 1 To Login\nPress 2 To Register\nPress 3 To Logout\nPress 4 To display_user_date\nPress 5 To Exit\nEnter: ");
+        scanf("%d", &option);
+
+        switch (option) {
+            case 1:
+                login();
+                break;
+            case 2:
+                registration();
+                break;
+            case 3:
+                logout();
+                break;
+            case 4:
+                display_user_data(0);
+                break;
+            case 5:
+                exit(0);
+            default:
+                printf("Invalid option. Please try again.\n");
+        }
+    }
+}
+
+void login() {
+    char l_email[30];
+    char l_password[20];
+    printf("This is login!\n");
+    printf("Enter your email to login: ");
+    scanf(" %[^\n]", l_email);
+    printf("Enter your password to login: ");
+    scanf(" %[^\n]", l_password);
+
+    login_checking(l_email, l_password);
+    if (g_login_check != -1) {
+        printf("Login Success!\n Your Id = %d", g_login_check);
+        my_privilege(g_login_check);
+    } else {
+        printf("Login Failed!\n");
+    }
+}
+
+void my_privilege(int user_id) {
+    data[user_id].is_logged_in = 1; // Set login status to true
+    display_user_data(user_id);
+}
+
+void logout() {
+    int user_id;
+    printf("Enter your user ID to logout: ");
+    scanf("%d", &user_id);
+
+    if (user_id >= 0 && user_id < g_userCount && data[user_id].is_logged_in) {
+        data[user_id].is_logged_in = 0;
+        printf("Logout Successful!\n");
+    } else {
+        printf("Invalid user ID or user is not logged in.\n");
+    }
+}
+
+void display_user_data(int user_id) {
+    printf("User Data:\n");
+    printf("User ID: %d\n", data[user_id].user_id);
+    printf("User Name: %s\n", data[user_id].user_name);
+    printf("User Email: %s\n", data[user_id].user_email);
+    printf("Phone Number: %d\n", data[user_id].phone_number);
+    printf("Address: %s\n", data[user_id].address);
+    printf("Postal Code: %d\n", data[user_id].postal_code);
+}
+
+void login_checking(char l_email[30],char l_pass[20]){
+    int i=0;
+    g_login_check=-1;
+    for(i=0; i<g_userCount ; i++){
+        int email_check =compare_two_char_array(data[i].user_email,l_email);
+
+        if(email_check == 1){
+            int pass_check =compare_two_char_array(data[i].user_pass,l_pass);
+            if(pass_check==1){
+                g_login_check=data[i].user_id;
+                break;
+            }
+
+        }
+
+    }
+
+}
+
+void registration() {
+    if (g_userCount < 5) { // Limiting to 5 users
+        char r_username[30];
+        char r_useremail[30];
+        char r_userpassword[20];
+        int r_phoneNumber = 0;
+        char r_address[50];
+        int r_postal_code = 0;
+
+
+        printf("This is Registration Option:\n");
+        printf("Enter your user name to Register: ");
+        scanf(" %[^\n]", r_username);
+
+        // Check if the email already exists
+        printf("Enter your user email to Register: ");
+        scanf(" %[^\n]", r_useremail);
+        if (isEmailRegistered(r_useremail)) {
+            printf("Email address is already registered. Please use a different email.\n");
+            return; // Exit registration process
+        }
+
+        // Password input with validation
+        do {
+            printf("Enter your user password to Register (at least 6 characters with uppercase, lowercase, numeric, and special characters): ");
+            scanf(" %[^\n]", r_userpassword);
+
+            // Check if the password meets the criteria
+            if (strlen(r_userpassword) < 6 ||
+                !hasUpperCase(r_userpassword) ||
+                !hasLowerCase(r_userpassword) ||
+                !hasDigit(r_userpassword) ||
+                !hasSpecialChar(r_userpassword)) {
+                printf("Invalid password! Please try again.\n");
+            } else {
+                break; // Password is valid
+            }
+        } while (1);
+
+        printf("Enter your PhoneNumber to Register: ");
+        scanf("%d", &r_phoneNumber);
+        printf("Enter your Address to Register: ");
+        scanf(" %[^\n]", r_address);
+        printf("Enter your Postal code to Register: ");
+        scanf("%d", &r_postal_code);
+
+        // Collecting data
+        copy_two_charArray(data[g_userCount].user_name, r_username);
+        copy_two_charArray(data[g_userCount].user_email, r_useremail);
+        copy_two_charArray(data[g_userCount].user_pass, r_userpassword);
+        data[g_userCount].phone_number = r_phoneNumber;
+        copy_two_charArray(data[g_userCount].address, r_address);
+        data[g_userCount].postal_code = r_postal_code;
+        data[g_userCount].user_id = g_userCount;
+        g_userCount++;
+
+        printf("\nRegistration successful!\n");
+    } else {
+        printf("Maximum number of users reached. Cannot register more users.\n");
+    }
+}
+
+int isEmailRegistered(const char *email) {
+    for (int i = 0; i < g_userCount; i++) {
+        if (strcmp(data[i].user_email, email) == 0) {
+            return 1; // Email is already registered
+        }
+    }
+    return 0; // Email is not registered
+}
+int hasUpperCase(const char *str) {
+    while (*str) {
+        if (isupper(*str)) {
+            return 1;
+        }
+        str++;
+    }
+    return 0;
+}
+
+int hasLowerCase(const char *str) {
+    while (*str) {
+        if (islower(*str)) {
+            return 1;
+        }
+        str++;
+    }
+    return 0;
+}
+
+int hasDigit(const char *str) {
+    while (*str) {
+        if (isdigit(*str)) {
+            return 1;
+        }
+        str++;
+    }
+    return 0;
+}
+
+int hasSpecialChar(const char *str) {
+    while (*str) {
+        if (!isalnum(*str)) {
+            return 1;
+        }
+        str++;
+    }
+    return 0;
+}
+void copy_two_charArray(char first[30],char second[30]){
+
+    int i=0;
+    for(i=0; i<30; i++){
+
+        if(second[i]=='\0'){
+
+            break;
+        } else{
+            first[i] = second[i];
+
+        }
+    }
+}
+
+int compare_two_char_array(char first[30],char second[30]){
+
+    int size1= size_of_charArray(first);
+    int size2= size_of_charArray(second);
+    int sameCount=0;
+    if( size1 == size2){
+        for(int i=0; i<size1; i++){
+
+            if(first[i]==second[i]){
+                sameCount++;
+            }
+        }
+    }
+    if(size1 == sameCount){
+        return 1;
+    } else{
+        return 0;
+    }
+}
+
+int size_of_charArray(char arr[30]){
+    int size=0;
+    for(int i=0; i<30 ;i++){
+
+        if(arr[i]=='\0'){
+            break;
+        }
+        size++;
+    }
+
+    return size;
+}
